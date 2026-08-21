@@ -1,0 +1,46 @@
+# ---- Secrets & local config (NEVER commit) ----
+.env
+*.env
+!.env.example
+secrets.auto.tfvars
+*.tfvars
+!example.tfvars
+sublime_api_key*
+*.pem
+
+# ---- Terraform ----
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+tfplan
+*.tfplan
+
+# ---- Python / uv ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.uv/
+build/
+dist/
+*.egg-info/
+
+# ---- Docker ----
+*.tar
+
+# ---- Jupyter ----
+.ipynb_checkpoints/
+notebook/*-output.ipynb
+
+# ---- OS / editor ----
+.DS_Store
+.vscode/
+.idea/
+*.swp
