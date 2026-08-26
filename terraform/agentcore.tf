@@ -32,7 +32,9 @@ resource "aws_bedrockagentcore_agent_runtime" "this" {
 }
 
 resource "aws_bedrockagentcore_agent_runtime_endpoint" "this" {
-  name             = "${var.project}-endpoint"
+  # Same constraint as agent_runtime_name above: ^[a-zA-Z][a-zA-Z0-9_]{0,47}$ —
+  # hyphens are rejected, so project names containing them must be normalised.
+  name             = replace("${var.project}_endpoint", "-", "_")
   agent_runtime_id = aws_bedrockagentcore_agent_runtime.this.agent_runtime_id
   description      = "Default invocation endpoint for the PhishBowl agent."
 }

@@ -19,13 +19,13 @@ variable "sublime_api_key" {
 variable "sublime_api_base" {
   description = "Sublime Platform API base URL. Confirm your tenant's value in the Sublime console."
   type        = string
-  default     = "https://api.platform.sublime.security"
+  default     = "https://platform.sublime.security"
 }
 
 variable "bedrock_model_id" {
   description = "Bedrock model id (or inference profile) the agent uses. Must be enabled in your account/region."
   type        = string
-  default     = "us.anthropic.claude-sonnet-4-20250514-v1:0"
+  default     = "us.anthropic.claude-sonnet-4-6"
 }
 
 variable "image_tag" {

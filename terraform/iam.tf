@@ -111,6 +111,17 @@ data "aws_iam_policy_document" "notebook_permissions" {
       "${aws_bedrockagentcore_agent_runtime.this.agent_runtime_arn}/*",
     ]
   }
+
+  statement {
+    sid    = "ReadNotebookAsset"
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+    ]
+    resources = [
+      "${aws_s3_bucket.assets.arn}/notebook/*",
+    ]
+  }
 }
 
 resource "aws_iam_role_policy" "notebook" {

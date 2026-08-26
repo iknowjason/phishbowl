@@ -76,6 +76,50 @@ cd terraform && terraform apply -var-file=secrets.auto.tfvars
 `terraform apply -replace=aws_bedrockagentcore_agent_runtime.this ...`, or push a
 new `image_tag`.)
 
+## Costs
+
+Rates are us-east-1, verified August 2026. Check the linked pricing pages before
+relying on these — AWS changes them.
+
+### Charged while the stack exists
+
+| Resource | Rate | Notes |
+|---|---|---|
+| SageMaker notebook `ml.t3.medium` | **$0.05 / hour** | Billed while the instance is `InService`, whether or not anyone is using it. ~$36/month if left running. **This dominates the bill.** |
+| Secrets Manager | **$0.40 / secret / month** | One secret (`phishbowl/sublime-api-key`), plus $0.05 per 10,000 API calls. |
+| ECR storage | **$0.10 / GB-month** | The agent image is ~0.10 GB, so ~$0.01/month. First 500 MB/month is free for the first year on new accounts. |
+| S3 (notebook asset) | **$0.023 / GB-month** | One `.ipynb`. Fractions of a cent. |
+
+**Stop the notebook instance when you are not using it.** It is the only resource
+here that bills for sitting idle, and it is roughly 97% of the standing cost.
+Stopping it (rather than destroying) preserves the EBS volume and your files.
+
+### Charged only when the agent runs
+
+| Resource | Rate | Notes |
+|---|---|---|
+| AgentCore Runtime | **$0.0895 / vCPU-hour** + **$0.00945 / GB-hour** | Consumption-based with a 1-second minimum. **No idle charge** — a deployed-but-uninvoked runtime costs nothing. A ~10s invocation is a fraction of a cent. |
+| Bedrock (Claude Sonnet 4.6) | **$3.00 / M input tokens**, **$15.00 / M output tokens** | Cache reads $0.30/M, cache writes $3.75/M. This dominates per-invocation cost. |
+
+A single triage is mostly Bedrock tokens: the agent reads message headers, links
+and bodies, so input tokens scale with `MAX_MESSAGES`. Expect roughly $0.05–$0.25
+per run depending on how much mail is in the window — lower `MAX_MESSAGES` and
+`LOOKBACK_MINUTES` to cap it.
+
+### Rough monthly totals
+
+| Usage | Estimate |
+|---|---|
+| Deployed, notebook stopped, no runs | **~$0.41/month** (secret + image storage) |
+| Notebook left running 24/7, no runs | **~$36/month** |
+| Notebook running 8h/day + 20 triages/day | **~$12 + ~$60 = ~$72/month** |
+
+Pricing sources: [AgentCore](https://aws.amazon.com/bedrock/agentcore/pricing/) ·
+[SageMaker](https://aws.amazon.com/sagemaker/pricing/) ·
+[ECR](https://aws.amazon.com/ecr/pricing/) ·
+[Secrets Manager](https://aws.amazon.com/secrets-manager/pricing/) ·
+[Bedrock](https://aws.amazon.com/bedrock/pricing/)
+
 ## Teardown
 
 ```bash

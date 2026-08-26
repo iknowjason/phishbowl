@@ -85,6 +85,19 @@ cd terraform && terraform init && terraform apply
 - Terraform ≥ 1.6, AWS provider ≥ 6.51 (for the `bedrockagentcore` resources).
 - Docker with `buildx` (to build the ARM64 image).
 
+## Costs
+
+The **SageMaker notebook is the only resource that bills while idle** —
+`ml.t3.medium` at ~$0.05/hour, about $36/month if you leave it running. Stop the
+instance when you are not using it.
+
+AgentCore Runtime is consumption-based with no idle charge, so a deployed agent
+costs nothing until invoked; per-run cost is dominated by Bedrock tokens
+($3/M in, $15/M out on Claude Sonnet 4.6). Standing cost with the notebook
+stopped is roughly **$0.41/month**.
+
+Full breakdown, per-run estimates and pricing sources: [`docs/deploy.md`](docs/deploy.md#costs).
+
 ## License
 
 [MIT](LICENSE) © 2026 Jason Ostrom

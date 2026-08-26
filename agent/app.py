@@ -25,7 +25,7 @@ from tools import ALL_TOOLS
 
 # Model is configurable so operators pin whatever they've enabled in Bedrock.
 # Must be a model your account has access to in this region (see docs/deploy.md).
-MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "us.anthropic.claude-sonnet-4-20250514-v1:0")
+MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "us.anthropic.claude-sonnet-4-6")
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 
 app = BedrockAgentCoreApp()
