@@ -27,7 +27,7 @@ from strands import tool
 # Sublime cloud API base. Self-hosted tenants override this with their own host
 # via the SUBLIME_API_BASE env var. Confirm your tenant's base URL in the console
 # (Settings ▸ API) — see docs/sublime-setup.md.
-DEFAULT_API_BASE = "https://api.platform.sublime.security"
+DEFAULT_API_BASE = "https://platform.sublime.security"
 
 REQUEST_TIMEOUT = 30  # seconds
 
@@ -110,15 +110,24 @@ def sublime_fetch_recent(mailbox: str, minutes: int = 5, max_messages: int = 25)
         A dict: {"mailbox", "window_minutes", "count", "messages": [ {message_id,
         subject, sender, recipient, received_at}, ... ]}.
     """
-    since = (datetime.now(timezone.utc) - timedelta(minutes=max(minutes, 0))).strftime(
-        "%Y-%m-%dT%H:%M:%SZ"
-    )
+    now = datetime.now(timezone.utc)
+    since = (now - timedelta(minutes=max(minutes, 0))).strftime("%Y-%m-%dT%H:%M:%SZ")
+    until = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    # Use /search, not /v0/message-groups. The latter is a flagged-mail listing:
+    # it takes double-underscore filters (created_at__gte) and additionally
+    # requires flagged=true or user_reported=true, so it cannot answer "all mail
+    # this mailbox received". /search takes bracket filters and needs at least
+    # one real search term — a time range alone is rejected as "No search terms
+    # provided", which is why `mailbox` and `type` are always sent.
     params = {
         "mailbox": mailbox,
+        "type": "inbound",
         "created_at[gte]": since,
+        "created_at[lt]": until,
         "limit": min(max(max_messages, 1), 500),
     }
-    data = _request("GET", "/v0/message-groups", params=params)
+    data = _request("GET", "/v0/message-groups/search", params=params)
 
     groups = data.get("message_groups") or data.get("results") or data.get("data") or []
     messages: list[dict] = []
