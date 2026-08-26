@@ -16,12 +16,26 @@ locals {
       echo "AWS_REGION=${var.aws_region}"
     } > "$ENVFILE"
     chown ec2-user:ec2-user "$ENVFILE" || true
+
+    # Seed the analyst notebook from S3. Only when absent, so a restart never
+    # discards an analyst's in-progress edits or saved outputs. Delete the file
+    # and restart the instance to pull a fresh copy.
+    NB=/home/ec2-user/SageMaker/phishbowl_triage.ipynb
+    if [ ! -f "$NB" ]; then
+      if aws s3 cp "s3://${aws_s3_object.notebook.bucket}/${aws_s3_object.notebook.key}" \
+           "$NB" --region ${var.aws_region}; then
+        chown ec2-user:ec2-user "$NB" || true
+      else
+        # Never abort on-start: a failed copy must not stop the instance booting.
+        echo "phishbowl: notebook download failed; upload it manually" >&2
+      fi
+    fi
   BASH
 }
 
 resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "this" {
-  name      = "${var.project}-lifecycle"
-  on_start  = base64encode(local.on_start)
+  name     = "${var.project}-lifecycle"
+  on_start = base64encode(local.on_start)
 }
 
 # Optional: clone the repo so phishbowl_triage.ipynb is already present.
